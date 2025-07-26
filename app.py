@@ -57,10 +57,9 @@ selected_mood = selected_mood.split(" ", 1)[1]  # Get actual mood text
 
 example_topic = get_topic_example(selected_mood)
 st.markdown(f"**📌 Describe Your Photo Topic**  &nbsp;&nbsp; *(e.g., '{example_topic}')*")
-# Topic input with character limit
-topic = st.text_input("", max_chars=50, placeholder="Type your topic here...✍️")
+topic_input = st.text_input(" ", max_chars=50, placeholder="Type your topic here...✍️")
 
-if topic and len(topic) < 5:
+if topic_input and len(topic_input.strip()) < 5:
     st.warning("Please enter a bit more detailed topic.")
 
 
