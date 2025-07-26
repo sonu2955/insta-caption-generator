@@ -1,12 +1,11 @@
 import random
-from openai import OpenAI
+import openai
 import os
 from dotenv import load_dotenv
-from openai.types.chat import ChatCompletionUserMessageParam, ChatCompletionSystemMessageParam
 
 # Load API Key
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Mood to example topics
 mood_topic_examples = {
@@ -46,7 +45,6 @@ def get_prompt(caption_type, mood, topic):
     if caption_history:
         joined_history = "\n".join(f"- {c}" for c in caption_history)
         history_note = f"\nAvoid repeating or copying any of these recent captions:\n{joined_history}"
-
 
     if caption_type == "Story":
         base_prompt = f"""{system_seed}
@@ -111,18 +109,18 @@ def generate_caption(caption_type, mood, topic):
     caption = ""
 
     while tries < max_attempts:
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                ChatCompletionSystemMessageParam(role="system", content="You're a skilled caption writer with a natural tone. Keep things real, creative, and unique."),
-                ChatCompletionUserMessageParam(role="user", content=prompt)
+                {"role": "system", "content": "You're a skilled caption writer with a natural tone. Keep things real, creative, and unique."},
+                {"role": "user", "content": prompt}
             ],
             max_tokens=60,
             temperature=1.0,
             top_p=0.95
         )
 
-        new_caption = response.choices[0].message.content.strip()
+        new_caption = response.choices[0].message["content"].strip()
 
         if new_caption not in caption_history:
             caption = new_caption
