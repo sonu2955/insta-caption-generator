@@ -7,7 +7,7 @@ from main import generate_caption, get_topic_example
 
 # ------------------- Google Sheets Setup -------------------
 SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-CREDS = Credentials.from_service_account_file("secrets/gspread_credentials.json", scopes=SCOPE)
+CREDS = Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=SCOPE)
 CLIENT = gspread.authorize(CREDS)
 SHEET = CLIENT.open_by_url("https://docs.google.com/spreadsheets/d/1ULA7sKGUAnXYWIIY-CLxTNJAarzW4iAH2xs13iGiHtU/edit?usp=sharing")
 WORKSHEET = SHEET.sheet1
