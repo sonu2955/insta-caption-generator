@@ -91,7 +91,33 @@ if topic_input and len(topic_input.strip()) < 3:
 col1, col2 = st.columns([1, 3])  # Button on left, message on right
 
 with col1:
-    if st.button("✨ Create Caption"):
+    # Styled button CSS
+    st.markdown("""
+        <style>
+        div.stButton > button {
+            background: linear-gradient(90deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            color: white;
+            border: none;
+            padding: 0.5rem 1.25rem;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.15s ease-in-out;
+        }
+        div.stButton > button:hover {
+            transform: scale(1.01);
+            opacity: 0.95;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # Real working button, looks like HTML one
+    clicked = st.button("🚀 Create Caption")
+
+    # Trigger logic if button was clicked
+    if clicked:
         if topic_input.strip() == "":
             st.warning("Please enter a topic to generate unique caption.")
         else:
@@ -105,6 +131,7 @@ with col1:
                 }
                 st.session_state.history.insert(0, result_caption)
                 st.session_state.history = st.session_state.history[:5]
+
 
 with col2:
     st.markdown("🔁 *click again for a new caption*")
