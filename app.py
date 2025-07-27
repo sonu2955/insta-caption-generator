@@ -77,7 +77,11 @@ selected_mood = st.selectbox("🎭 Select Photo Mood", [f"{mood_emojis[m]} {m}" 
 selected_mood = selected_mood.split(" ", 1)[1]
 
 example_topic = get_topic_example(selected_mood)
-st.markdown(f"**📌 Describe Your Photo Topic below**  &nbsp;&nbsp; *(e.g., '{example_topic}')*")
+st.markdown(f"""
+**📌 Describe Your Caption Topic below**  
+<small><i>(e.g., '{example_topic}')</i></small>
+""", unsafe_allow_html=True)
+
 topic_input = st.text_input(" ", max_chars=50, placeholder="Type your topic here...✍️")
 
 if topic_input and len(topic_input.strip()) < 3:
