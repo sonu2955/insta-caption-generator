@@ -1,11 +1,11 @@
 import random
-import openai
 import os
 from dotenv import load_dotenv
+from openai import OpenAI
 
 # Load API Key
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Mood to example topics
 mood_topic_examples = {
@@ -109,7 +109,7 @@ def generate_caption(caption_type, mood, topic):
     caption = ""
 
     while tries < max_attempts:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You're a skilled caption writer with a natural tone. Keep things real, creative, and unique."},
@@ -120,7 +120,7 @@ def generate_caption(caption_type, mood, topic):
             top_p=0.95
         )
 
-        new_caption = response.choices[0].message["content"].strip()
+        new_caption = response.choices[0].message.content.strip()
 
         if new_caption not in caption_history:
             caption = new_caption

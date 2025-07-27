@@ -1,9 +1,31 @@
 import streamlit as st
-import pandas as pd
-import os
 import random
 import base64
+import gspread
+from google.oauth2.service_account import Credentials
 from main import generate_caption, get_topic_example
+
+# ------------------- Google Sheets Setup -------------------
+SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+CREDS = Credentials.from_service_account_file("secrets/gspread_credentials.json", scopes=SCOPE)
+CLIENT = gspread.authorize(CREDS)
+SHEET = CLIENT.open_by_url("https://docs.google.com/spreadsheets/d/1ULA7sKGUAnXYWIIY-CLxTNJAarzW4iAH2xs13iGiHtU/edit?usp=sharing")
+WORKSHEET = SHEET.sheet1
+
+def like_caption(caption_text, mood_val, type_val, topic_val):
+    records = WORKSHEET.get_all_records()
+    for idx, record in enumerate(records):
+        if (record["caption"] == caption_text and record["mood"] == mood_val and
+            record["type"] == type_val and record["topic"] == topic_val):
+            WORKSHEET.update_cell(idx + 2, 5, record["likes"] + 1)  # Row + header, Column 5 = likes
+            return
+    WORKSHEET.append_row([caption_text, mood_val, type_val, topic_val, 1])
+
+def get_top_liked_captions(mood_val, type_val):
+    records = WORKSHEET.get_all_records()
+    filtered = [rec for rec in records if rec["mood"] == mood_val and rec["type"] == type_val]
+    sorted_filtered = sorted(filtered, key=lambda x: x["likes"], reverse=True)
+    return sorted_filtered[:5]
 
 # ------------------- Page Setup -------------------
 st.set_page_config(page_title="My_Caption", page_icon="📸", layout="centered")
@@ -44,16 +66,15 @@ st.markdown(f"""
 
 # ------------------- Mood & Caption Type -------------------
 st.markdown("---")
-caption_types = ["Story", "Post", "Notes", "Reels", "Attitude & stylish"]
-caption_type = st.selectbox("📝 Select Caption Type", caption_types)
+caption_type_selected = st.selectbox("📝 Select Caption Type", ["Story", "Post", "Notes", "Reels", "Attitude & stylish"])
 
 mood_emojis = {
     "Romantic": "💖", "Funny": "😂", "Adventure": "🗺️", "Motivational": "💪",
-    "Friends": "👯", "Travel": "✈️", "Food": "🍕", "Fitness": "🏋️", "Fashion": "👗"
+    "Friends": "👫", "Travel": "✈️", "Food": "🍕", "Fitness": "🏋️", "Fashion": "👗"
 }
 moods = list(mood_emojis.keys())
 selected_mood = st.selectbox("🎭 Select Photo Mood", [f"{mood_emojis[m]} {m}" for m in moods])
-selected_mood = selected_mood.split(" ", 1)[1]  # Get actual mood text
+selected_mood = selected_mood.split(" ", 1)[1]
 
 example_topic = get_topic_example(selected_mood)
 st.markdown(f"**📌 Describe Your Photo Topic**  &nbsp;&nbsp; *(e.g., '{example_topic}')*")
@@ -62,21 +83,20 @@ topic_input = st.text_input(" ", max_chars=50, placeholder="Type your topic here
 if topic_input and len(topic_input.strip()) < 5:
     st.warning("Please enter a bit more detailed topic.")
 
-
 # ------------------- Caption Generation -------------------
 if st.button("✨ Generate Caption"):
     if topic_input.strip() == "":
         st.warning("Please enter a topic to generate a caption.")
     else:
         with st.spinner("Generating caption..."):
-            caption = generate_caption(caption_type, selected_mood, topic_input)
-            st.session_state.caption = caption
+            result_caption = generate_caption(caption_type_selected, selected_mood, topic_input)
+            st.session_state.caption = result_caption
             st.session_state.last_input = {
                 "mood": selected_mood,
-                "type": caption_type,
+                "type": caption_type_selected,
                 "topic": topic_input
             }
-            st.session_state.history.insert(0, caption)
+            st.session_state.history.insert(0, result_caption)
             st.session_state.history = st.session_state.history[:5]
 
 # ------------------- Output Caption -------------------
@@ -92,58 +112,56 @@ if st.session_state.caption:
     st.code(st.session_state.caption, language='text')
 
     col1, col2 = st.columns([1, 1])
+
     with col1:
-        st.button("📋 Copy Caption", key="copy_btn", help="Copy to clipboard")
+        import streamlit.components.v1 as components
+
+        copy_text = st.session_state.caption.replace("'", "\\'")
+        components.html(
+            f"""
+            <button onclick="navigator.clipboard.writeText('{copy_text}')"
+                style="
+                    padding: 10px 20px;
+                    font-size: 16px;
+                    color: white;
+                    background-color: #4CAF50;
+                    border: none;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    transition: background-color 0.3s ease;
+                "
+                onmouseover="this.style.backgroundColor='#45a049'"
+                onmouseout="this.style.backgroundColor='#4CAF50'"
+            >
+                📋 Copy Caption
+            </button>
+            """,
+            height=60,
+        )
+
     with col2:
         if st.button("👍 Like this caption", key="like_btn"):
-            LIKED_FILE = "liked_captions.csv"
-            if os.path.exists(LIKED_FILE):
-                liked_df = pd.read_csv(LIKED_FILE)
-            else:
-                liked_df = pd.DataFrame(columns=["caption", "mood", "type", "topic", "likes"])
-
-            new_entry = {
-                "caption": st.session_state.caption,
-                "mood": st.session_state.last_input["mood"],
-                "type": st.session_state.last_input["type"],
-                "topic": st.session_state.last_input["topic"]
-            }
-
-            match = (
-                (liked_df["caption"] == new_entry["caption"]) &
-                (liked_df["mood"] == new_entry["mood"]) &
-                (liked_df["type"] == new_entry["type"]) &
-                (liked_df["topic"] == new_entry["topic"])
+            like_caption(
+                st.session_state.caption,
+                st.session_state.last_input["mood"],
+                st.session_state.last_input["type"],
+                st.session_state.last_input["topic"]
             )
-
-            if isinstance(match, pd.Series) and match.any():
-                liked_df.loc[match, "likes"] += 1
-            else:
-                new_entry["likes"] = 1
-                liked_df = pd.concat([liked_df, pd.DataFrame([new_entry])], ignore_index=True)
-
-            liked_df.to_csv(LIKED_FILE, index=False)
             st.success("💜 Saved to liked captions!")
 
 # ------------------- Top Liked Captions -------------------
-LIKED_FILE = "liked_captions.csv"
-if os.path.exists(LIKED_FILE):
-    liked_df = pd.read_csv(LIKED_FILE)
-    filtered_likes = liked_df[
-        (liked_df["mood"] == selected_mood) &
-        (liked_df["type"] == caption_type)
-    ]
+top_liked = get_top_liked_captions(selected_mood, caption_type_selected)
 
-    if not filtered_likes.empty:
-        top_liked = filtered_likes.sort_values(by="likes", ascending=False).head(5)
-        liked_options = [f"{i+1}. {row['caption']}  ❤️ ({row['likes']})"
-                         for i, row in top_liked.reset_index().iterrows()]
+if top_liked and isinstance(top_liked, list):
+    with st.expander("💜 Top Liked Captions (Filtered)", expanded=False):
+        for i, top_row in enumerate(top_liked):
+            caption = top_row.get('caption', 'No caption')
+            likes = top_row.get('likes', 0)
+            st.markdown(f"{i+1}. {caption} ❤️ ({likes})")
+else:
+    st.info("No liked captions yet for this mood and caption type.")
 
-        with st.expander("💜 Top Liked Captions (Filtered)", expanded=False):
-            for caption in liked_options:
-                st.markdown(f"- {caption}")
-    else:
-        st.info("No liked captions yet for this mood and caption type.")
+
 
 # ------------------- Caption History -------------------
 if st.session_state.history:
