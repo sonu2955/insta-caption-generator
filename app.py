@@ -77,33 +77,34 @@ selected_mood = st.selectbox("🎭 Select Photo Mood", [f"{mood_emojis[m]} {m}" 
 selected_mood = selected_mood.split(" ", 1)[1]
 
 example_topic = get_topic_example(selected_mood)
-st.markdown(f"**📌 Describe Your Photo Topic**  &nbsp;&nbsp; *(e.g., '{example_topic}')*")
+st.markdown(f"**📌 Describe Your Photo Topic below**  &nbsp;&nbsp; *(e.g., '{example_topic}')*")
 topic_input = st.text_input(" ", max_chars=50, placeholder="Type your topic here...✍️")
 
-if topic_input and len(topic_input.strip()) < 5:
-    st.warning("Please enter a bit more detailed topic.")
+if topic_input and len(topic_input.strip()) < 3:
+    st.warning("Please enter a topic bit more detailed.")
 
 # ------------------- Caption Generation -------------------
-col1, col2 = st.columns([1, 3])
-with col1:
-    generate_clicked = st.button("✨ Generate Caption")
-with col2:
-    st.markdown("<span style='font-size:14px; color:gray;'>⬅️ Click again to get different caption</span>", unsafe_allow_html=True)
+col1, col2 = st.columns([1, 3])  # Button on left, message on right
 
-if generate_clicked:
-    if topic_input.strip() == "":
-        st.warning("Please enter a topic to generate a caption.")
-    else:
-        with st.spinner("Generating caption..."):
-            result_caption = generate_caption(caption_type_selected, selected_mood, topic_input)
-            st.session_state.caption = result_caption
-            st.session_state.last_input = {
-                "mood": selected_mood,
-                "type": caption_type_selected,
-                "topic": topic_input
-            }
-            st.session_state.history.insert(0, result_caption)
-            st.session_state.history = st.session_state.history[:5]
+with col1:
+    if st.button("✨ Create Caption"):
+        if topic_input.strip() == "":
+            st.warning("Please enter a topic to generate unique caption.")
+        else:
+            with st.spinner("Generating caption..."):
+                result_caption = generate_caption(caption_type_selected, selected_mood, topic_input)
+                st.session_state.caption = result_caption
+                st.session_state.last_input = {
+                    "mood": selected_mood,
+                    "type": caption_type_selected,
+                    "topic": topic_input
+                }
+                st.session_state.history.insert(0, result_caption)
+                st.session_state.history = st.session_state.history[:5]
+
+with col2:
+    st.markdown("⬅️ *Tap again for a new caption*")
+
 
 
 # ------------------- Output Caption -------------------
@@ -157,6 +158,7 @@ if st.session_state.caption:
             st.success("💜 Saved to liked captions!")
 
 # ------------------- Top Liked Captions -------------------
+st.markdown("---")
 top_liked = get_top_liked_captions(selected_mood, caption_type_selected)
 
 if top_liked and isinstance(top_liked, list):
