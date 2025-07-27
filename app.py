@@ -103,8 +103,7 @@ with col1:
                 st.session_state.history = st.session_state.history[:5]
 
 with col2:
-    st.markdown("⬅️ *click again for a new caption*")
-
+    st.markdown("🔁 *click again for a new caption*")
 
 
 # ------------------- Output Caption -------------------
