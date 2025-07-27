@@ -69,8 +69,8 @@ st.markdown("---")
 caption_type_selected = st.selectbox("📝 Select Caption Type", ["Story", "Post", "Notes", "Reels", "Attitude & stylish"])
 
 mood_emojis = {
-    "Romantic": "💖", "Funny": "😂", "Adventure": "🗺️", "Motivational": "💪",
-    "Friends": "👫", "Travel": "✈️", "Food": "🍕", "Fitness": "🏋️", "Fashion": "👗"
+    "Fitness": "🏋️", "Funny": "😂", "Adventure": "🗺️", "Motivational": "💪",
+    "Romantic": "💖","Friends": "👫", "Travel": "✈️", "Food": "🍕",  "Fashion": "👗"
 }
 moods = list(mood_emojis.keys())
 selected_mood = st.selectbox("🎭 Select Photo Mood", [f"{mood_emojis[m]} {m}" for m in moods])
