@@ -84,7 +84,13 @@ if topic_input and len(topic_input.strip()) < 5:
     st.warning("Please enter a bit more detailed topic.")
 
 # ------------------- Caption Generation -------------------
-if st.button("✨ Generate Caption"):
+col1, col2 = st.columns([1, 3])
+with col1:
+    generate_clicked = st.button("✨ Generate Caption")
+with col2:
+    st.markdown("<span style='font-size:14px; color:gray;'>⬅️ Click again to get different caption</span>", unsafe_allow_html=True)
+
+if generate_clicked:
     if topic_input.strip() == "":
         st.warning("Please enter a topic to generate a caption.")
     else:
@@ -98,6 +104,7 @@ if st.button("✨ Generate Caption"):
             }
             st.session_state.history.insert(0, result_caption)
             st.session_state.history = st.session_state.history[:5]
+
 
 # ------------------- Output Caption -------------------
 if 'caption' not in st.session_state:
