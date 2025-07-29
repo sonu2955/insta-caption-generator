@@ -50,7 +50,7 @@ def get_prompt(caption_type, mood, topic):
         base_prompt = f"""{system_seed}
 You are helping someone write a short Instagram Story caption. It should feel expressive, emotional, or casual — like a vibe or mood they're feeling today.
 Write a 1-liner or short aesthetic caption for a story about '{topic}' in a '{mood}' mood.
-Use emojis if it fits. Keep it natural and relatable. Output only the caption.
+Use emojis if it fits. Keep it natural and relatable. Output only the caption. do not write hashtag.
 """
 
     elif caption_type == "Post":
@@ -69,7 +69,7 @@ Output only the caption.
         base_prompt = f"""{system_seed}
 You're helping someone post a daily quote or note on Instagram. It should reflect their current thoughts, mindset, or something inspiring.
 Write a short, meaningful daily note based on the theme '{topic}' in a '{mood}' tone.
-Keep it grounded, original, and not generic. Emojis optional. Output only the quote.
+Keep it grounded, original, and not generic. Emojis optional. Output only the quote. make it very short only few words without hashtag.
 """
 
     elif caption_type == "Reels":
