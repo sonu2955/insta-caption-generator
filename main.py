@@ -110,7 +110,7 @@ def generate_caption(caption_type, mood, topic):
 
     while tries < max_attempts:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You're a skilled caption writer with a natural tone. Keep things real, creative, and unique."},
                 {"role": "user", "content": prompt}
